@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PC de Rick Michel</title>
+<style>
+  /* ============================================================
+     DONNÉES À MODIFIER : tout en bas du fichier, dans le bloc
+     JS "const dossiers = {...}". Rien d'autre à toucher.
+     ============================================================ */
+
+  :root{
+    --bg: #16130f;
+    --bg-soft: #201b15;
+    --bg-softer: #2a231b;
+    --text: #f2e9da;
+    --text-dim: #a89a83;
+    --accent: #ffb703;
+    --accent-dim: #c78d02;
+    --red: #e63946;
+    --line: rgba(242,233,218,0.12);
+    --danger: #e63946;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0;
+    height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  .checker{
+    height: 8px;
+    width: 100%;
+    flex-shrink:0;
+    background-image: repeating-linear-gradient(45deg, #0d0b09 0 10px, var(--accent) 10px 20px);
+    position:relative;
+    z-index: 2;
+  }
+
+  h1,h2,.brand{
+    font-family: 'Arial Black', Impact, -apple-system, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- décor beauf : pluie de bières/frites sur les côtés ---------- */
+  .pluie{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .pluie-item{
+    position: absolute;
+    top: -12%;
+    animation-name: tomber;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  .pluie-item svg{ width:100%; height:100%; display:block; }
+
+  @keyframes tomber{
+    0%   { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(125vh) rotate(360deg); }
+  }
+
+  .pluie-grande{
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 5;
+    filter: drop-shadow(0 0 9px rgba(255,183,3,0.6));
+  }
+  .pluie-grande:hover{ filter: drop-shadow(0 0 15px rgba(255,183,3,0.9)); }
+
+  .surprise-modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(10,8,6,0.86);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 7vw;
+    z-index: 100;
+  }
+  .surprise-modal.open{ display:flex; }
+  .surprise-modal img{
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: 8px;
+    border: 2px solid var(--accent);
+    display:block;
+  }
+  .surprise-close{
+    position: absolute;
+    top: 18px; right: 20px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .icon-inline{
+    display:inline-block;
+    vertical-align: middle;
+    width: 1.3em;
+    height: 1.3em;
+    margin: 0 0.15em;
+  }
+  .icon-inline svg{ width:100%; height:100%; display:block; }
+
+  /* ---------- écran mot de passe ---------- */
+  .gate{
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(255,183,3,0.10), transparent 55%),
+      var(--bg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 6vw;
+    z-index: 50;
+    transition: opacity 0.5s ease;
+  }
+
+  .gate.hidden{
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .lock-icon{
+    width: 44px;
+    height: 44px;
+    margin-bottom: 1.2rem;
+    color: var(--accent);
+  }
+
+  .gate-kicker{
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+  }
+
+  .gate h2{
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+    margin: 0 0 0.4rem 0;
+    text-align:center;
+    color: var(--text);
+  }
+
+  .gate .sub{
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin: 0 0 2rem 0;
+    text-align:center;
+  }
+
+  .gate form{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 0.9rem;
+    width: 100%;
+    max-width: 280px;
+    position:relative;
+    z-index:1;
+  }
+
+  .gate input{
+    width: 100%;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    color: var(--text);
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    text-align:center;
+  }
+
+  .gate input:focus{
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+
+  .gate button{
+    width:100%;
+    background: linear-gradient(180deg, var(--accent), var(--accent-dim));
+    border: none;
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    color: #1a1305;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+  }
+
+  .gate button:hover{ filter: brightness(1.08); }
+
+  .gate .error{
+    font-size: 0.78rem;
+    color: var(--danger);
+    height: 1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .gate .error.show{ opacity: 1; }
+
+  .gate.shake form{ animation: shake 0.35s ease; }
+
+  @keyframes shake{
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* ---------- écran "site fermé" ---------- */
+  .locked-out{
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 6vw;
+    z-index: 60;
+  }
+
+  .locked-out.hidden{ display:none; }
+
+  .locked-out .icon{
+    width: 40px;
+    height: 40px;
+    margin-bottom: 1.2rem;
+    color: var(--danger);
+  }
+
+  .locked-out .kicker{
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--danger);
+    margin: 0 0 0.6rem 0;
+  }
+
+  .locked-out h2{
+    font-size: clamp(1.3rem, 4vw, 1.7rem);
+    margin: 0 0 0.9rem 0;
+    text-align:center;
+  }
+
+  .locked-out .countdown{
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-badge{
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .timer-badge.warn{ color: var(--danger); }
+
+  /* ---------- barre du haut (façon OS) ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 0.6rem 1.1rem;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    position:relative;
+    z-index: 1;
+  }
+
+  .topbar .user{
+    display:flex;
+    align-items:center;
+    gap: 0.5rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .topbar .right{
+    display:flex;
+    align-items:center;
+    gap: 0.8rem;
+  }
+
+  .music-btn{
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--text-dim);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    cursor:pointer;
+  }
+
+  .music-btn:hover{ color: var(--text); border-color: var(--accent-dim); }
+
+  .dot{
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    display:inline-block;
+  }
+
+  /* ---------- bureau : dossiers ---------- */
+  .desktop{
+    flex: 1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 6vh 6vw;
+    position:relative;
+    z-index: 1;
+  }
+
+  .desktop-title{
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0 0 2.4rem 0;
+  }
+
+  .folders{
+    display:flex;
+    gap: 1.4rem;
+    flex-wrap: wrap;
+    justify-content:center;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .folder{
+    flex: 1 1 160px;
+    max-width: 190px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.6rem 1.2rem;
+    cursor: pointer;
+    text-align:center;
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    color: var(--text);
+    font-family: inherit;
+  }
+
+  .folder:hover{
+    border-color: var(--accent-dim);
+    transform: translateY(-2px);
+    background: var(--bg-softer);
+  }
+
+  .folder svg{ width: 34px; height: 34px; color: var(--accent); margin-bottom: 0.9rem; }
+
+  .folder .nom-dossier{ font-size: 0.95rem; font-weight: 700; display:block; }
+  .folder .count{ font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem; display:block; }
+
+  /* ---------- fenêtre d'un dossier ouvert ---------- */
+  .browser{
+    display:none;
+    width: 100%;
+    max-width: 640px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow:hidden;
+  }
+
+  .browser.open{ display:block; }
+
+  .browser-bar{
+    display:flex;
+    align-items:center;
+    gap: 0.7rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-softer);
+  }
+
+  .back-btn{
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--text-dim);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .back-btn:hover{ color: var(--text); border-color: var(--accent-dim); }
+
+  .browser-title{ font-size: 0.85rem; font-weight: 700; color: var(--text); }
+
+  .file-list{
+    display:flex;
+    flex-direction:column;
+    max-height: 320px;
+    overflow-y:auto;
+  }
+
+  .file-row{
+    display:flex;
+    align-items:center;
+    gap: 0.7rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--line);
+    cursor:pointer;
+    background:none;
+    border-left: none; border-right:none; border-top:none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.88rem;
+    text-align:left;
+    width:100%;
+    transition: background 0.15s ease;
+  }
+
+  .file-row:hover{ background: var(--bg-softer); }
+  .file-row.active{ background: rgba(255,183,3,0.10); color: var(--accent); }
+
+  .file-row svg{ width: 15px; height: 15px; flex-shrink:0; color: var(--text-dim); }
+  .file-row.active svg{ color: var(--accent); }
+
+  .point-alerte{
+    display:inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    flex-shrink: 0;
+    animation: clignoter-point 1s ease-in-out infinite;
+  }
+
+  .file-row.clignote span:last-child{
+    color: var(--danger);
+    font-weight: 700;
+  }
+
+  .file-row.clignote.active span:last-child{
+    color: var(--accent);
+  }
+
+  @keyframes clignoter-point{
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(230,57,70,0.55); }
+    50% { opacity: 0.25; box-shadow: 0 0 0 5px rgba(230,57,70,0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .point-alerte{ animation: none; }
+  }
+
+  .note{
+    border-top: 1px solid var(--line);
+    padding: 1.1rem 1.2rem 1.3rem 1.2rem;
+    background: var(--bg-softer);
+    display:none;
+  }
+
+  .note.show{ display:block; }
+
+  .note .label{
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.5rem 0;
+  }
+
+  .note .texte{
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--text);
+    margin: 0;
+  }
+
+  /* ---------- mini-jeu de piratage ---------- */
+  .minigame{
+    display:none;
+    width: 100%;
+    max-width: 640px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow:hidden;
+  }
+
+  .minigame.open{ display:block; }
+
+  .mg-bar{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-softer);
+  }
+
+  .mg-title{ font-size: 0.85rem; font-weight: 700; color: var(--text); }
+
+  .mg-clock{
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.9rem;
+  }
+
+  .mg-clock.warn{ color: var(--danger); }
+
+  .mg-body{
+    padding: 1.4rem 1.3rem 1.6rem 1.3rem;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 1rem;
+    min-height: 270px;
+    justify-content:center;
+  }
+
+  .mg-instructions{
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-align:center;
+    max-width: 40ch;
+  }
+
+  .mg-target-zone{
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    height: 190px;
+    background: var(--bg-softer);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+
+  .mg-target{
+    position:absolute;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--accent), var(--accent-dim));
+    border: none;
+    cursor:pointer;
+  }
+
+  .mg-simon{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    width: 100%;
+    max-width: 220px;
+  }
+
+  .mg-tile{
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    cursor:pointer;
+    opacity: 0.55;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+
+  .mg-tile.lit{ opacity: 1; transform: scale(0.96); }
+  .mg-tile:nth-child(1){ background:#e63946; }
+  .mg-tile:nth-child(2){ background:#ffb703; }
+  .mg-tile:nth-child(3){ background:#2a9d8f; }
+  .mg-tile:nth-child(4){ background:#457b9d; }
+
+  .mg-code{
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    font-weight: 700;
+    text-align:center;
+  }
+
+  .mg-input{
+    width: 100%;
+    max-width: 220px;
+    background: var(--bg-softer);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.7rem 1rem;
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 0.2em;
+    text-align:center;
+    text-transform: uppercase;
+  }
+
+  .mg-input:focus{ outline:none; border-color: var(--accent-dim); }
+
+  .mg-result{
+    text-align:center;
+    padding: 0.5rem 0;
+  }
+
+  .mg-result .titre{
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 0 0 0.4rem 0;
+    text-transform: uppercase;
+  }
+
+  .mg-result.success .titre{ color: var(--accent); }
+  .mg-result.fail .titre{ color: var(--danger); }
+
+  .mg-actions{
+    display:flex;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+  }
+
+  .mg-btn{
+    border: 1px solid var(--line);
+    background: var(--bg-softer);
+    color: var(--text);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor:pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+  }
+
+  .mg-btn.primary{
+    background: linear-gradient(180deg, var(--accent), var(--accent-dim));
+    color: #1a1305;
+    font-weight: 700;
+    border: none;
+  }
+
+  .mg-cablage{
+    display:flex;
+    justify-content:space-between;
+    width:100%;
+    max-width: 220px;
+  }
+
+  .mg-col{
+    display:flex;
+    flex-direction:column;
+    gap: 0.55rem;
+  }
+
+  .mg-wire{
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    cursor:pointer;
+  }
+
+  .mg-wire.sel{ outline: 3px solid #fff; }
+  .mg-wire.done{ opacity: 0.22; cursor:default; }
+
+  .mg-verrou-track{
+    position:relative;
+    width:100%;
+    max-width: 260px;
+    height: 14px;
+    background: var(--bg-softer);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+
+  .mg-verrou-zone{
+    position:absolute;
+    top:0; bottom:0;
+    background: rgba(42,157,143,0.55);
+    border-radius: 4px;
+  }
+
+  .mg-verrou-curseur{
+    position:absolute;
+    top:-4px;
+    width: 4px;
+    height: 22px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .folder, .file-row, .mg-tile{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- décor beauf animé, généré en JS (voir script plus bas) -->
+
+  <div class="checker"></div>
+
+  <div class="gate" id="gate">
+    <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="4" y="10" width="16" height="10" rx="2"/>
+      <path d="M7 10V7a5 5 0 0 1 10 0v3"/>
+    </svg>
+    <p class="gate-kicker">Ordinateur verrouillé</p>
+    <h2>Session de Rick Michel</h2>
+    <p class="sub">
+      <span class="icon-inline"><svg viewBox="0 0 64 64"><rect x="14" y="18" width="30" height="34" rx="3" fill="#ffb703"/><path d="M44 24h6a6 6 0 0 1 0 12h-6" fill="none" stroke="#c78d02" stroke-width="4"/></svg></span>
+      <span class="icon-inline"><svg viewBox="0 0 64 64"><path d="M18 30h28l-4 26a4 4 0 0 1-4 4H26a4 4 0 0 1-4-4l-4-26Z" fill="#e63946"/><rect x="28" y="6" width="4" height="28" fill="#ffe8a3"/></svg></span>
+      🚗💨
+    </p>
+    <form id="gate-form">
+      <input type="password" id="gate-input" autocomplete="off" placeholder="Mot de passe" inputmode="numeric">
+      <p class="error" id="gate-error">Mot de passe incorrect.</p>
+      <button type="submit">Déverrouiller</button>
+    </form>
+  </div>
+
+  <div class="locked-out hidden" id="locked-out">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3 3"/>
+    </svg>
+    <p class="kicker">Session terminée</p>
+    <h2>Le PC est verrouillé.</h2>
+    <p class="countdown" id="lockout-countdown">--:--:--</p>
+  </div>
+
+  <div class="topbar">
+    <span class="user"><span class="dot"></span> Rick Michel</span>
+    <span class="right">
+      <button class="music-btn" id="music-btn" type="button">🔊</button>
+      <span class="timer-badge" id="timer-badge">2:00</span>
+    </span>
+  </div>
+
+  <div class="desktop">
+    <p class="desktop-title">Bureau — Rick Michel</p>
+
+    <div class="folders" id="folders"></div>
+
+    <div class="minigame" id="minigame">
+      <div class="mg-bar">
+        <span class="mg-title" id="mg-title">Intrusion en cours...</span>
+        <span class="mg-clock" id="mg-clock">0:30</span>
+      </div>
+      <div class="mg-body" id="mg-body"></div>
+    </div>
+
+    <div class="browser" id="browser">
+      <div class="browser-bar">
+        <button class="back-btn" id="back-btn">← Dossiers</button>
+        <span class="browser-title" id="browser-title"></span>
+      </div>
+      <div class="file-list" id="file-list"></div>
+      <div class="note" id="note">
+        <p class="label" id="note-nom"></p>
+        <p class="texte" id="note-texte"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="checker"></div>
+
+  <div class="surprise-modal" id="surprise-modal">
+    <button class="surprise-close" id="surprise-close" type="button">✕</button>
+    <img id="surprise-img" src="" alt="">
+  </div>
+
+<script>
+  // ============================================================
+  //  DÉCOR : pluie de bières/frites qui tombent sur les côtés
+  // ============================================================
+  const biereSVG = '<svg viewBox="0 0 64 64"><rect x="14" y="18" width="30" height="34" rx="3" fill="#ffb703"/><rect x="14" y="18" width="30" height="8" fill="#fff8e7" opacity="0.85"/><path d="M44 24h6a6 6 0 0 1 0 12h-6" fill="none" stroke="#c78d02" stroke-width="4"/><rect x="14" y="12" width="30" height="8" rx="3" fill="#fff" opacity="0.9"/></svg>';
+  const fritesSVG = '<svg viewBox="0 0 64 64"><path d="M18 30h28l-4 26a4 4 0 0 1-4 4H26a4 4 0 0 1-4-4l-4-26Z" fill="#e63946"/><rect x="22" y="10" width="4" height="24" fill="#ffe8a3"/><rect x="28" y="6" width="4" height="28" fill="#ffe8a3"/><rect x="34" y="12" width="4" height="22" fill="#ffe8a3"/><rect x="40" y="8" width="4" height="26" fill="#ffe8a3"/></svg>';
+
+  let conteneurPluie = null;
+
+  (function creerPluie(){
+    conteneurPluie = document.createElement('div');
+    conteneurPluie.className = 'pluie';
+    document.body.insertBefore(conteneurPluie, document.body.firstChild);
+
+    const total = 20;
+    for (let i = 0; i < total; i++){
+      const item = document.createElement('div');
+      item.className = 'pluie-item';
+      item.innerHTML = i % 2 === 0 ? biereSVG : fritesSVG;
+
+      const taille = 24 + Math.random() * 28; // 24–52px
+      item.style.width = taille + 'px';
+      item.style.height = taille + 'px';
+
+      // uniquement sur les côtés : bande de 0–13% à gauche, ou 87–100% à droite
+      const surGauche = i % 2 === 0;
+      const marge = Math.random() * 13;
+      item.style.left = (surGauche ? marge : (100 - marge)) + '%';
+
+      const duree = 8 + Math.random() * 9; // 8–17s
+      item.style.animationDuration = duree + 's';
+      item.style.animationDelay = (-Math.random() * duree) + 's';
+      item.style.opacity = (0.35 + Math.random() * 0.4).toFixed(2);
+
+      conteneurPluie.appendChild(item);
+    }
+  })();
+
+  // ============================================================
+  //  ITEM GÉANT SURPRISE — toutes les 30 secondes, une bière ou
+  //  une frite plus grosse tombe sur un des côtés. Cliquer dessus
+  //  ouvre une image au hasard.
+  //
+  //  À MODIFIER : dépose tes images dans un dossier "images/" à
+  //  côté d'index.html sur GitHub, puis liste leurs noms ici.
+  //  Exemple : "images/photo1.jpg"
+  // ============================================================
+  const imagesSurprises = [
+    "images/Capture d'écran 2026-02-15 184733.png",
+    "images/Capture d'écran 2026-04-04 011307.png",
+    "images/Capture d'écran 2026-04-16 142647.png",
+    "images/Capture d'écran 2026-04-19 035621.png",
+    "images/Capture d'écran 2026-04-21 185321.png",
+    "images/Capture d'écran 2026-04-22 012338.png",
+    "images/Capture d'écran 2026-06-03 131023.png",
+    "images/Capture d'écran 2026-06-05 012820.png",
+    "images/Capture d'écran 2026-06-05 024739.png",
+    "images/Capture d'écran 2026-06-05 181911.png",
+    "images/Capture d'écran 2026-06-10 004931.png",
+    "images/Capture d'écran 2026-06-11 175455.png",
+    "images/Capture d'écran 2026-06-30 203431.png",
+    "images/Capture d'écran 2026-06-30 211234.png",
+    "images/Capture d'écran 2026-07-04 024604.png",
+    "images/Capture d'écran 2026-08-03 192114.png",
+    "images/Capture d'écran 2026-08-20 021844.png",
+    "images/Capture d'écran 2026-08-21 023608.png",
+    "images/Capture d'écran 2026-08-29 184549.png",
+    "images/Capture d'écran 2026-08-30 021741.png",
+    "images/Capture d'écran 2026-08-30 153440.png",
+    "images/Capture d'écran 2026-09-02 230612.png",
+    "images/Capture d'écran 2026-09-10 023633.png",
+  ];
+
+  const surpriseModal = document.getElementById('surprise-modal');
+  const surpriseImg = document.getElementById('surprise-img');
+  const surpriseClose = document.getElementById('surprise-close');
+
+  function ouvrirSurprise(){
+    if (imagesSurprises.length === 0) return;
+    const choix = imagesSurprises[Math.floor(Math.random() * imagesSurprises.length)];
+    surpriseImg.src = choix;
+    surpriseModal.classList.add('open');
+  }
+  surpriseClose.addEventListener('click', () => surpriseModal.classList.remove('open'));
+  surpriseModal.addEventListener('click', (e) => {
+    if (e.target === surpriseModal) surpriseModal.classList.remove('open');
+  });
+
+  function creerItemGeant(){
+    if (!conteneurPluie) return;
+    const item = document.createElement('div');
+    item.className = 'pluie-item pluie-grande';
+    item.innerHTML = Math.random() < 0.5 ? biereSVG : fritesSVG;
+
+    const taille = 95 + Math.random() * 35; // bien plus gros que les autres
+    item.style.width = taille + 'px';
+    item.style.height = taille + 'px';
+
+    const surGauche = Math.random() < 0.5;
+    const marge = Math.random() * 8;
+    item.style.left = (surGauche ? marge : (100 - marge)) + '%';
+
+    const duree = 10 + Math.random() * 4;
+    item.style.animationDuration = duree + 's';
+    item.style.animationDelay = '0s';
+    item.style.animationIterationCount = '1';
+    item.style.opacity = '0.95';
+
+    item.addEventListener('click', ouvrirSurprise);
+    conteneurPluie.appendChild(item);
+
+    setTimeout(() => item.remove(), duree * 1000 + 200);
+  }
+  setTimeout(creerItemGeant, 5000);
+  setInterval(creerItemGeant, 30000);
+
+  // ============================================================
+  //  À MODIFIER : change les valeurs ici.
+  //  Chaque personne a un "nom" et une "info" (la phrase révélée
+  //  au clic). Laisse info: "" si tu n'as pas encore le texte.
+  // ============================================================
+  const dossiers = {
+    "Élèves": [
+      { nom: "Zack", info: "Il s'appelle en réalité Hugo Chevalier, un de ses meilleurs amis d'avant." },
+      { nom: "Tyler", info: "Après avoir échappé à ses propres agresseurs, Tyler a décidé de devenir la justice qu'il estimait incapable de les arrêter." },
+      { nom: "Maddy", info: "Terrifiée à l'idée d'être abandonnée, elle a séquestré Inès pour découvrir qu'empêcher quelqu'un de partir pouvait étrangement la rassurer." },
+      { nom: "Edgar", info: "" },
+      { nom: "Bingus", info: "Il se prend pour un super-héros capable de contrôler le vent, alors que son véritable pouvoir semble surtout être de semer le chaos." },
+      { nom: "Nolan", info: "Pour lui, cambrioler n'a jamais été une question d'argent : il cherche simplement à résoudre des énigmes que personne d'autre n'ose tenter." },
+      { nom: "Angelika", info: "Populaire, riche et intouchable en apparence, elle a harcelé une élève jusqu'à ce que celle-ci mette fin à ses jours." },
+      { nom: "Capucine", info: "QUE ELLE CHIALEEEEEEEE", clignote: true },
+      { nom: "Dingus", info: "Persuadé d'être un héros, il est pourtant responsable de l'accident d'avion qu'il considère encore comme sa plus grande victoire." },
+      { nom: "Eden", info: "hasard" },
+      { nom: "Riju", info: "Derrière ses blagues incessantes se cache une fille qui a grandi entre harcèlement, violence familiale et un soir qu'elle n'a jamais réussi à oublier." },
+      { nom: "Evelyne", info: "Après avoir subi des années de violences, elle a assassiné ses parents puis son cousin, celui qu'elle accusait d'avoir détruit son enfance." },
+      { nom: "Ada", info: "Elle choisissait les victimes, connaissait leurs habitudes et transformait leurs maisons en cauchemars, mais son frère ignore encore qu'elle est allée trop loin." },
+      { nom: "Eimi", info: "Hackeuse arrogante, elle a infiltré des serveurs gouvernementaux avant de tout faire échouer pour une erreur aussi ridicule qu'impardonnable." },
+      { nom: "Sam", info: "Après avoir suivi les traces de son père dans le trafic de drogue, Sam a été rejeté par sa propre mère et ne fait désormais confiance à presque personne." },
+      { nom: "Ero", info: "Il voulait seulement récupérer le collier de son père et saboter le projet de ses harceleurs, mais son geste a accidentellement coûté la vie au gardien." },
+      { nom: "Jake", info: "Avec sa sœur, il s'introduisait chez des criminels pour les terroriser, jusqu'à ce qu'une de leurs victimes chute dans un escalier et révèle leur existence.", clignote: true },
+      { nom: "Gabriel", info: "" },
+      { nom: "Sucre", info: "Obsédée par un garçon qui ne partageait pas ses sentiments, elle a progressivement franchi la frontière entre amour, surveillance et criminalité." },
+      { nom: "Rin", info: "Sous une nouvelle identité, cette hackeuse recherchée a travaillé pour le gouvernement avant de retourner ses compétences contre lui." },
+      { nom: "Eimi Min", info: "Pour elle, l'amour se résume à l'attention : lorsqu'on lui échappe, elle est capable de droguer et séquestrer ceux qu'elle refuse de perdre.", clignote: true },
+      { nom: "Mauvine", info: "a gagné son jugement, et donc repartit" },
+      { nom: "Nate", info: "" },
+      { nom: "Theo", info: "Membre d'un cartel malgré lui, Théo porte surtout la culpabilité d'avoir perdu son père à cause d'une décision qu'il regrette chaque jour." },
+      { nom: "Olivia", info: "Depuis l'incendie qui a tué sa meilleure amie, Olivia vit avec la certitude qu'elle est responsable et la peur que les flammes reviennent." },
+      { nom: "Blanche", info: "Après avoir été enfermée et trahie par ses propres amis, elle a empoisonné leur chef avant de découvrir jusqu'où sa vengeance pouvait aller." },
+      { nom: "Albert", info: "Petit dealer devenu accro, il a dénoncé son propre cartel après la mystérieuse disparition de son frère, sans jamais savoir s'il l'avait condamné." },
+      { nom: "Jad", info: 'Fasciné par les secrets et les esprits sombres, il avait prémédité des meurtres dans un véritable "Death Note" avant que son propre esprit ne le trahisse.' },
+      { nom: "Freya", info: "Après avoir découvert que son seul amour avait participé à son harcèlement, elle l'a tué et n'a plus jamais réussi à faire taire le souvenir de son visage." },
+      { nom: "Isaac", info: "Cambrioleur méthodique, il a utilisé son ancienne relation avec Inès pour s'introduire chez sa famille et s'attaquer au symbole même de leur richesse." },
+      { nom: "Evan", info: "Élevé à détester ceux qu'il juge différents, il a violemment agressé le garçon dont il était secrètement amoureux." },
+      { nom: "Moon", info: "Persuadée d'aider un ami à récupérer des souvenirs volés, elle s'est introduite chez un collectionneur et s'est fait arrêter sans même avoir rien dérobé." },
+      { nom: "Isaac McMillan", info: "Moi ? Coupable ? Alien ? Fantômes ? ARRÊTEZZZZZZZZZZ" },
+      { nom: "Freak", info: "TIC TAC TIC TAC TIC TAC... disparu", clignote: true },
+      { nom: "Amy", info: "Escroc et manipulatrice hors pair, elle a participé à des années d'arnaques avant de se faire arrêter avec sa sœur pour avoir oublié leur VPN." },
+      { nom: "Tingus", info: "Son plus grand talent n'est pas de diriger ses frères, mais de fuir avant qu'ils découvrent qu'elle les a encore perdus." },
+    ],
+
+    "Professeurs": [
+      "Mme Cristofeuille","Mr Burritoss","Mr Valmont","Mme Knave",
+      "Mr Duplanty","Mme Ashcroft","Mr Nérulis","Mr Polochon",
+      "Mme Elena","Mme Nicole"
+    ].map(nom => ({ nom, info: "" })),
+
+    "Personnel de l'école": [
+      "Mme Castana","Mme Thorns","Mr Béryl","Mr Benjamin","Mr Dessendre"
+    ].map(nom => ({ nom, info: "" })),
+  };
+
+  // Mot de passe pour déverrouiller le PC
+  const motDePasse = "15051991";
+  // Durée d'accès autorisée après déverrouillage (en secondes)
+  const dureeSession = 120;
+  // Durée du blocage après la fin d'une session (en heures)
+  const dureeBlocage = 24;
+  // Durée de chaque mini-jeu de piratage (en secondes)
+  const dureeMinigame = 30;
+  // ============================================================
+
+  const CLE_SESSION = 'rm_session_debut';
+  const CLE_BLOCAGE = 'rm_bloque_jusqua';
+
+  // Le blocage est dupliqué dans le stockage local ET dans un cookie,
+  // et les deux se resynchronisent au chargement. Si la personne efface
+  // l'un des deux sans toucher à l'autre, le blocage tient toujours.
+  // (Un nettoyage complet des données du site, ou la navigation privée,
+  // contourne quand même ça : sans serveur, rien ne peut en être sûr à 100%.)
+  function setCookie(nom, valeur, dureeSecondes){
+    const expires = new Date(Date.now() + dureeSecondes * 1000).toUTCString();
+    document.cookie = `${nom}=${valeur}; expires=${expires}; path=/; SameSite=Lax`;
+  }
+  function getCookie(nom){
+    const m = document.cookie.match(new RegExp('(?:^|; )' + nom + '=([^;]*)'));
+    return m ? m[1] : null;
+  }
+  function deleteCookie(nom){
+    document.cookie = `${nom}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+  }
+  function ecrireBlocage(finBlocage){
+    localStorage.setItem(CLE_BLOCAGE, String(finBlocage));
+    const dureeRestante = Math.ceil((finBlocage - Date.now()) / 1000) + 60;
+    setCookie(CLE_BLOCAGE, String(finBlocage), dureeRestante);
+  }
+  function lireBlocage(){
+    const ls = parseInt(localStorage.getItem(CLE_BLOCAGE), 10);
+    const cookieRaw = getCookie(CLE_BLOCAGE);
+    const ck = cookieRaw !== null ? parseInt(cookieRaw, 10) : NaN;
+    if (!isNaN(ls) && !isNaN(ck)) return Math.max(ls, ck);
+    if (!isNaN(ls)) return ls;
+    if (!isNaN(ck)) return ck;
+    return NaN;
+  }
+  function effacerBlocage(){
+    localStorage.removeItem(CLE_BLOCAGE);
+    deleteCookie(CLE_BLOCAGE);
+  }
+
+  // ---------- écran mot de passe ----------
+  const gate = document.getElementById('gate');
+  const gateForm = document.getElementById('gate-form');
+  const gateInput = document.getElementById('gate-input');
+  const gateError = document.getElementById('gate-error');
+  const lockedOutEl = document.getElementById('locked-out');
+  const lockoutCountdownEl = document.getElementById('lockout-countdown');
+  const timerBadge = document.getElementById('timer-badge');
+  const topbar = document.querySelector('.topbar');
+  const desktop = document.querySelector('.desktop');
+
+  let sessionTimerId = null;
+  let lockoutTimerId = null;
+
+  function formatMMSS(totalSeconds){
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+
+  function formatHHMMSS(totalSeconds){
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function fermerLeSite(){
+    clearInterval(sessionTimerId);
+    arreterMusique();
+    const finBlocage = Date.now() + dureeBlocage * 60 * 60 * 1000;
+    ecrireBlocage(finBlocage);
+    localStorage.removeItem(CLE_SESSION);
+    topbar.style.display = 'none';
+    desktop.style.display = 'none';
+    gate.classList.add('hidden');
+    afficherEcranBloque(finBlocage);
+  }
+
+  function afficherEcranBloque(finBlocage){
+    lockedOutEl.classList.remove('hidden');
+    clearInterval(lockoutTimerId);
+    lockoutTimerId = setInterval(() => {
+      const restant = Math.max(0, Math.round((finBlocage - Date.now()) / 1000));
+      lockoutCountdownEl.textContent = formatHHMMSS(restant);
+      if (restant <= 0){
+        clearInterval(lockoutTimerId);
+        effacerBlocage();
+        lockedOutEl.classList.add('hidden');
+        topbar.style.display = '';
+        desktop.style.display = '';
+        gate.classList.remove('hidden');
+      }
+    }, 1000);
+    lockoutCountdownEl.textContent = formatHHMMSS(Math.max(0, Math.round((finBlocage - Date.now()) / 1000)));
+  }
+
+  function demarrerSession(debut){
+    localStorage.setItem(CLE_SESSION, String(debut));
+    gate.classList.add('hidden');
+    demarrerMusique();
+    clearInterval(sessionTimerId);
+    sessionTimerId = setInterval(() => {
+      const ecoule = Math.floor((Date.now() - debut) / 1000);
+      const restant = dureeSession - ecoule;
+      if (restant <= 0){
+        fermerLeSite();
+        return;
+      }
+      timerBadge.textContent = formatMMSS(restant);
+      timerBadge.classList.toggle('warn', restant <= 15);
+    }, 250);
+  }
+
+  gateForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (gateInput.value.trim() === motDePasse) {
+      gateError.classList.remove('show');
+      demarrerSession(Date.now());
+    } else {
+      gateError.classList.add('show');
+      gate.classList.remove('shake');
+      void gate.offsetWidth;
+      gate.classList.add('shake');
+      gateInput.value = '';
+      gateInput.focus();
+    }
+  });
+
+  // ---------- au chargement : reprendre une session en cours ou un blocage ----------
+  (function initAuChargement(){
+    const finBlocage = lireBlocage();
+    if (!isNaN(finBlocage) && finBlocage > Date.now()){
+      ecrireBlocage(finBlocage); // resynchronise le cookie et le stockage local entre eux
+      topbar.style.display = 'none';
+      desktop.style.display = 'none';
+      gate.classList.add('hidden');
+      afficherEcranBloque(finBlocage);
+      return;
+    }
+    if (!isNaN(finBlocage)) effacerBlocage();
+
+    const debutSession = parseInt(localStorage.getItem(CLE_SESSION), 10);
+    if (!isNaN(debutSession)){
+      const ecoule = Math.floor((Date.now() - debutSession) / 1000);
+      if (ecoule < dureeSession){
+        demarrerSession(debutSession);
+      } else {
+        localStorage.removeItem(CLE_SESSION);
+        fermerLeSite();
+      }
+    }
+  })();
+
+  // ============================================================
+  //  MUSIQUE D'AMBIANCE — petite boucle synthétisée, sans paroles
+  //  (générée par le navigateur, aucun fichier audio externe)
+  // ============================================================
+  const musicBtn = document.getElementById('music-btn');
+  let audioCtx = null;
+  let musiqueActive = true;
+  let musiqueTimeoutId = null;
+
+  const melodieNotes  = [392,392,440,494,440,392,330,392, 494,494,523,587,523,494,440,392];
+  const basseNotes    = [196,196,220,196, 247,247,220,196];
+
+  function jouerNote(freq, debut, duree, type, volume){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, debut);
+    gain.gain.linearRampToValueAtTime(volume, debut + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, debut + duree);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(debut);
+    osc.stop(debut + duree + 0.02);
+  }
+
+  function boucleMusique(){
+    if (!musiqueActive || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    const noteDur = 0.24;
+    melodieNotes.forEach((freq, i) => {
+      jouerNote(freq, now + i * noteDur, noteDur * 0.85, 'triangle', 0.045);
+    });
+    basseNotes.forEach((freq, i) => {
+      jouerNote(freq, now + i * noteDur * 2, noteDur * 1.7, 'square', 0.03);
+    });
+    const total = melodieNotes.length * noteDur;
+    musiqueTimeoutId = setTimeout(boucleMusique, total * 1000);
+  }
+
+  function demarrerMusique(){
+    if (!musiqueActive) return;
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    clearTimeout(musiqueTimeoutId);
+    boucleMusique();
+    musicBtn.textContent = '🔊';
+  }
+
+  function arreterMusique(){
+    clearTimeout(musiqueTimeoutId);
+    musicBtn.textContent = '🔇';
+  }
+
+  musicBtn.addEventListener('click', () => {
+    musiqueActive = !musiqueActive;
+    if (musiqueActive) demarrerMusique();
+    else arreterMusique();
+  });
+
+  // ---------- bureau / dossiers ----------
+  const foldersEl = document.getElementById('folders');
+  const browserEl = document.getElementById('browser');
+  const fileListEl = document.getElementById('file-list');
+  const browserTitleEl = document.getElementById('browser-title');
+  const backBtn = document.getElementById('back-btn');
+  const noteEl = document.getElementById('note');
+  const noteNomEl = document.getElementById('note-nom');
+  const noteTexteEl = document.getElementById('note-texte');
+  const minigameEl = document.getElementById('minigame');
+  const mgTitle = document.getElementById('mg-title');
+  const mgClock = document.getElementById('mg-clock');
+  const mgBody = document.getElementById('mg-body');
+
+  const folderIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>`;
+  const fileIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M15 2v5h5"/></svg>`;
+
+  Object.keys(dossiers).forEach(cat => {
+    const f = document.createElement('button');
+    f.className = 'folder';
+    f.innerHTML = `${folderIcon}<span class="nom-dossier">${cat}</span><span class="count">${dossiers[cat].length} fichiers</span>`;
+    f.addEventListener('click', () => lancerIntrusionDossier(cat));
+    foldersEl.appendChild(f);
+  });
+
+  backBtn.addEventListener('click', () => {
+    browserEl.classList.remove('open');
+    noteEl.classList.remove('show');
+    foldersEl.style.display = '';
+  });
+
+  function openFolder(cat){
+    browserTitleEl.textContent = cat;
+    fileListEl.innerHTML = '';
+    noteEl.classList.remove('show');
+
+    dossiers[cat].forEach(personne => {
+      const row = document.createElement('button');
+      row.className = 'file-row' + (personne.clignote ? ' clignote' : '');
+      row.innerHTML = `${fileIcon}${personne.clignote ? '<span class="point-alerte"></span>' : ''}<span>${personne.nom}</span>`;
+      row.addEventListener('click', () => lancerIntrusionFiche(cat, personne, row));
+      fileListEl.appendChild(row);
+    });
+
+    browserEl.classList.add('open');
+  }
+
+  function reveleFiche(personne, row){
+    document.querySelectorAll('.file-row').forEach(r => r.classList.remove('active'));
+    row.classList.add('active');
+    noteNomEl.textContent = personne.nom.toUpperCase();
+    noteTexteEl.textContent = personne.info && personne.info.trim() !== ''
+      ? personne.info
+      : "Aucune information pour le moment.";
+    noteEl.classList.add('show');
+  }
+
+  // ============================================================
+  //  MINI-JEUX DE PIRATAGE
+  //  Requis à chaque ouverture de dossier ET à chaque clic sur
+  //  une fiche (élève / professeur / personnel).
+  //  Un jeu est choisi au hasard parmi la liste ci-dessous.
+  // ============================================================
+
+  let mgTimerId = null;
+  let mgTimeLeft = dureeMinigame;
+  let mgCleanup = null;
+
+  function lancerIntrusionDossier(cat){
+    lancerMinigame(
+      `Intrusion — ${cat}`,
+      () => openFolder(cat),
+      () => { foldersEl.style.display = ''; }
+    );
+  }
+
+  function lancerIntrusionFiche(cat, personne, row){
+    lancerMinigame(
+      `Intrusion — ${personne.nom}`,
+      () => { browserEl.classList.add('open'); reveleFiche(personne, row); },
+      () => { browserEl.classList.add('open'); }
+    );
+  }
+
+  function lancerMinigame(titre, onSuccess, onCancel){
+    foldersEl.style.display = 'none';
+    browserEl.classList.remove('open');
+    minigameEl.classList.add('open');
+    demarrerMinigame(titre, onSuccess, onCancel);
+  }
+
+  function demarrerMinigame(titre, onSuccess, onCancel){
+    if (mgCleanup) { mgCleanup(); mgCleanup = null; }
+    clearInterval(mgTimerId);
+    mgTimeLeft = dureeMinigame;
+    mgClock.textContent = formatMMSS(mgTimeLeft);
+    mgClock.classList.remove('warn');
+    mgTitle.textContent = titre;
+
+    const jeux = [jeuCible, jeuSimon, jeuFrappe, jeuCablage, jeuCalcul, jeuVerrou];
+    const jeuChoisi = jeux[Math.floor(Math.random() * jeux.length)];
+    mgCleanup = jeuChoisi(mgBody, () => reussiteMinigame(onSuccess)) || null;
+
+    mgTimerId = setInterval(() => {
+      mgTimeLeft--;
+      mgClock.textContent = formatMMSS(Math.max(0, mgTimeLeft));
+      mgClock.classList.toggle('warn', mgTimeLeft <= 6);
+      if (mgTimeLeft <= 0){
+        clearInterval(mgTimerId);
+        echecMinigame(titre, onSuccess, onCancel);
+      }
+    }, 1000);
+  }
+
+  function reussiteMinigame(onSuccess){
+    clearInterval(mgTimerId);
+    if (mgCleanup) { mgCleanup(); mgCleanup = null; }
+    mgBody.innerHTML = `
+      <div class="mg-result success">
+        <p class="titre">Accès autorisé</p>
+        <p class="mg-instructions">Connexion établie.</p>
+      </div>`;
+    setTimeout(() => {
+      minigameEl.classList.remove('open');
+      onSuccess();
+    }, 650);
+  }
+
+  function echecMinigame(titre, onSuccess, onCancel){
+    if (mgCleanup) { mgCleanup(); mgCleanup = null; }
+    mgBody.innerHTML = `
+      <div class="mg-result fail">
+        <p class="titre">Échec — connexion interrompue</p>
+        <p class="mg-instructions">La tentative a échoué. Retente ou reviens en arrière.</p>
+      </div>
+      <div class="mg-actions">
+        <button class="mg-btn primary" id="mg-retry">Réessayer</button>
+        <button class="mg-btn" id="mg-cancel">Annuler</button>
+      </div>`;
+    document.getElementById('mg-retry').addEventListener('click', () => {
+      demarrerMinigame(titre, onSuccess, onCancel);
+    });
+    document.getElementById('mg-cancel').addEventListener('click', () => {
+      minigameEl.classList.remove('open');
+      onCancel();
+    });
+  }
+
+  // ---- Mini-jeu 1 : cible mouvante ----
+  function jeuCible(container, onSuccess){
+    const necessaire = 14;
+    let hits = 0;
+    container.innerHTML = `
+      <p class="mg-instructions">Clique sur la cible avant qu'elle ne se déplace. <span id="cible-compteur">0</span>/${necessaire}</p>
+      <div class="mg-target-zone" id="cible-zone"></div>
+    `;
+    const zone = document.getElementById('cible-zone');
+    const compteur = document.getElementById('cible-compteur');
+
+    function placer(){
+      const target = document.createElement('button');
+      target.className = 'mg-target';
+      const maxX = zone.clientWidth - 34;
+      const maxY = zone.clientHeight - 34;
+      target.style.left = Math.random() * maxX + 'px';
+      target.style.top = Math.random() * maxY + 'px';
+      target.addEventListener('click', () => {
+        hits++;
+        compteur.textContent = hits;
+        target.remove();
+        if (hits >= necessaire) onSuccess();
+        else placer();
+      });
+      zone.appendChild(target);
+    }
+    placer();
+  }
+
+  // ---- Mini-jeu 2 : séquence façon Simon ----
+  function jeuSimon(container, onSuccess){
+    const longueur = 7;
+    const sequence = Array.from({length: longueur}, () => Math.floor(Math.random() * 4));
+    let indexAttendu = 0;
+    let peutJouer = false;
+
+    container.innerHTML = `
+      <p class="mg-instructions">Mémorise la séquence puis reproduis-la.</p>
+      <div class="mg-simon" id="simon-grid">
+        <button class="mg-tile" data-i="0"></button>
+        <button class="mg-tile" data-i="1"></button>
+        <button class="mg-tile" data-i="2"></button>
+        <button class="mg-tile" data-i="3"></button>
+      </div>
+    `;
+    const tiles = container.querySelectorAll('.mg-tile');
+    let timeouts = [];
+
+    function allumer(i){
+      return new Promise(resolve => {
+        tiles[i].classList.add('lit');
+        timeouts.push(setTimeout(() => {
+          tiles[i].classList.remove('lit');
+          timeouts.push(setTimeout(resolve, 130));
+        }, 360));
+      });
+    }
+
+    async function jouerSequence(){
+      peutJouer = false;
+      for (const i of sequence){
+        await allumer(i);
+      }
+      indexAttendu = 0;
+      peutJouer = true;
+    }
+
+    tiles.forEach(tile => {
+      tile.addEventListener('click', () => {
+        if (!peutJouer) return;
+        const i = parseInt(tile.dataset.i, 10);
+        tile.classList.add('lit');
+        setTimeout(() => tile.classList.remove('lit'), 130);
+        if (i === sequence[indexAttendu]){
+          indexAttendu++;
+          if (indexAttendu >= sequence.length) onSuccess();
+        } else {
+          jouerSequence();
+        }
+      });
+    });
+
+    jouerSequence();
+    return () => timeouts.forEach(clearTimeout);
+  }
+
+  // ---- Mini-jeu 3 : frappe rapide ----
+  function jeuFrappe(container, onSuccess){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 9; i++) code += chars[Math.floor(Math.random() * chars.length)];
+
+    container.innerHTML = `
+      <p class="mg-instructions">Retape le code exactement, puis valide.</p>
+      <p class="mg-code">${code}</p>
+      <input class="mg-input" id="frappe-input" autocomplete="off" placeholder="........." maxlength="9">
+      <div class="mg-actions">
+        <button class="mg-btn primary" id="frappe-valider">Valider</button>
+      </div>
+    `;
+    const input = document.getElementById('frappe-input');
+    input.focus();
+
+    function tenter(){
+      if (input.value.trim().toUpperCase() === code){
+        onSuccess();
+      } else {
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    document.getElementById('frappe-valider').addEventListener('click', tenter);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tenter(); });
+  }
+
+  // ---- Mini-jeu 4 : câblage (relier les paires de couleurs) ----
+  function jeuCablage(container, onSuccess){
+    const couleurs = ['#e63946','#ffb703','#2a9d8f','#457b9d','#9b5de5'];
+    let connectes = 0;
+    let selectionGauche = null;
+
+    container.innerHTML = `
+      <p class="mg-instructions">Relie chaque câble de gauche à son câble de même couleur, à droite.</p>
+      <div class="mg-cablage">
+        <div class="mg-col" id="col-gauche"></div>
+        <div class="mg-col" id="col-droite"></div>
+      </div>
+    `;
+    const colG = container.querySelector('#col-gauche');
+    const colD = container.querySelector('#col-droite');
+    const gauche = [...couleurs].sort(() => Math.random() - 0.5);
+    const droite = [...couleurs].sort(() => Math.random() - 0.5);
+
+    gauche.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'mg-wire';
+      btn.style.background = c;
+      btn.dataset.color = c;
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('done')) return;
+        colG.querySelectorAll('.mg-wire').forEach(w => w.classList.remove('sel'));
+        btn.classList.add('sel');
+        selectionGauche = btn;
+      });
+      colG.appendChild(btn);
+    });
+
+    droite.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'mg-wire';
+      btn.style.background = c;
+      btn.dataset.color = c;
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('done') || !selectionGauche) return;
+        if (selectionGauche.dataset.color === c){
+          selectionGauche.classList.add('done');
+          selectionGauche.disabled = true;
+          btn.classList.add('done');
+          btn.disabled = true;
+          connectes++;
+          selectionGauche = null;
+          if (connectes >= couleurs.length) onSuccess();
+        } else {
+          selectionGauche.classList.remove('sel');
+          selectionGauche = null;
+        }
+      });
+      colD.appendChild(btn);
+    });
+  }
+
+  // ---- Mini-jeu 5 : calcul mental en série ----
+  function jeuCalcul(container, onSuccess){
+    const total = 5;
+    let courant = 0;
+
+    function genererProbleme(){
+      const ops = ['+','-','×'];
+      const op = ops[Math.floor(Math.random() * ops.length)];
+      let a, b, resultat;
+      if (op === '×'){
+        a = Math.floor(Math.random() * 11) + 2;
+        b = Math.floor(Math.random() * 11) + 2;
+        resultat = a * b;
+      } else {
+        a = Math.floor(Math.random() * 60) + 10;
+        b = Math.floor(Math.random() * 30) + 2;
+        resultat = op === '+' ? a + b : a - b;
+      }
+      return { texte: `${a} ${op} ${b}`, resultat };
+    }
+
+    let probleme = genererProbleme();
+
+    function afficher(){
+      container.innerHTML = `
+        <p class="mg-instructions">Résous les calculs avant la fin du temps. (${courant + 1}/${total})</p>
+        <p class="mg-code">${probleme.texte} = ?</p>
+        <input class="mg-input" id="calcul-input" type="number" autocomplete="off">
+        <div class="mg-actions"><button class="mg-btn primary" id="calcul-valider">Valider</button></div>
+      `;
+      const input = container.querySelector('#calcul-input');
+      input.focus();
+
+      function tenter(){
+        if (parseInt(input.value, 10) === probleme.resultat){
+          courant++;
+          if (courant >= total){ onSuccess(); return; }
+          probleme = genererProbleme();
+          afficher();
+        } else {
+          input.value = '';
+          input.focus();
+        }
+      }
+
+      container.querySelector('#calcul-valider').addEventListener('click', tenter);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tenter(); });
+    }
+
+    afficher();
+  }
+
+  // ---- Mini-jeu 6 : verrou rotatif (timing) ----
+  function jeuVerrou(container, onSuccess){
+    const necessaire = 6;
+    let hits = 0;
+    let pos = 0;
+    let dir = 1;
+    let zoneWidth = 16;
+    let animId = null;
+    let actif = true;
+
+    container.innerHTML = `
+      <p class="mg-instructions">Clique sur "Bloquer" quand le curseur passe dans la zone verte. <span id="verrou-compteur">0</span>/${necessaire}</p>
+      <div class="mg-verrou-track" id="verrou-track">
+        <div class="mg-verrou-zone" id="verrou-zone"></div>
+        <div class="mg-verrou-curseur" id="verrou-curseur"></div>
+      </div>
+      <div class="mg-actions"><button class="mg-btn primary" id="verrou-bloquer">Bloquer</button></div>
+    `;
+    const zoneEl = container.querySelector('#verrou-zone');
+    const curseurEl = container.querySelector('#verrou-curseur');
+    const compteurEl = container.querySelector('#verrou-compteur');
+    let zoneStart = 0;
+
+    function placerZone(){
+      zoneStart = Math.random() * (100 - zoneWidth - 10) + 5;
+      zoneEl.style.left = zoneStart + '%';
+      zoneEl.style.width = zoneWidth + '%';
+    }
+    placerZone();
+
+    function animer(){
+      if (!actif) return;
+      pos += dir * 1.8;
+      if (pos >= 100){ pos = 100; dir = -1; }
+      if (pos <= 0){ pos = 0; dir = 1; }
+      curseurEl.style.left = pos + '%';
+      animId = requestAnimationFrame(animer);
+    }
+    animer();
+
+    container.querySelector('#verrou-bloquer').addEventListener('click', () => {
+      if (pos >= zoneStart && pos <= zoneStart + zoneWidth){
+        hits++;
+        compteurEl.textContent = hits;
+        zoneWidth = Math.max(7, zoneWidth - 1.3);
+        placerZone();
+        if (hits >= necessaire){
+          actif = false;
+          cancelAnimationFrame(animId);
+          onSuccess();
+        }
+      }
+    });
+
+    return () => { actif = false; cancelAnimationFrame(animId); };
+  }
+</script>
+
+</body>
+</html>
